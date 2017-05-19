@@ -32,13 +32,13 @@ enum macro_id {
 /*
  * Fn action definition
  */
-const uint16_t PROGMEM fn_actions[] = {
+const action_t PROGMEM fn_actions[] = {
     [0] = ACTION_LAYER_MOMENTARY(1),
     [1] = ACTION_LAYER_MOMENTARY(2),
 
     [5] = ACTION_MACRO(CMD_TAB),
     [6] = ACTION_MACRO(CTL_TAB),
-    [7] = ACTION_MODS_TAP_KEY(MOD_LALT, KC_F5),
+    [7] = ACTION_MODS_TAP_KEY(MOD_LALT, KC_APP),
     [8] = ACTION_MODS_ONESHOT(MOD_RGUI),
 
     [10] = ACTION_MODS_KEY(MOD_LSFT, KC_GRV),
