@@ -1,5 +1,5 @@
 /*
-Copyright 2012,2013 Jun Wako <wakojun@gmail.com>
+Copyright 2012,2013,2020 Jun Wako <wakojun@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "action.h"
 #include "hook.h"
 #include "wait.h"
+#include "bootloader.h"
 
 #ifdef DEBUG_ACTION
 #include "debug.h"
@@ -58,6 +59,8 @@ void action_exec(keyevent_t event)
 
 void process_action(keyrecord_t *record)
 {
+    if (hook_process_action(record)) return;
+
     keyevent_t event = record->event;
 #ifndef NO_ACTION_TAPPING
     uint8_t tap_count = record->tap.count;
@@ -65,7 +68,7 @@ void process_action(keyrecord_t *record)
 
     if (IS_NOEVENT(event)) { return; }
 
-    action_t action = layer_switch_get_action(event.key);
+    action_t action = layer_switch_get_action(event);
     dprint("ACTION: "); debug_action(action);
 #ifndef NO_ACTION_LAYER
     dprint(" layer_state: "); layer_debug();
@@ -160,6 +163,13 @@ void process_action(keyrecord_t *record)
                                 } else {
                                     dprint("MODS_TAP: Tap: register_code\n");
                                     register_code(action.key.code);
+
+                                    // Delay for MacOS #659
+                                    if (action.key.code == KC_CAPSLOCK ||
+                                            action.key.code == KC_NUMLOCK ||
+                                            action.key.code == KC_SCROLLLOCK) {
+                                        wait_ms(100);
+                                    }
                                 }
                             } else {
                                 dprint("MODS_TAP: No tap: add_mods\n");
@@ -291,6 +301,13 @@ void process_action(keyrecord_t *record)
                         if (tap_count > 0) {
                             dprint("KEYMAP_TAP_KEY: Tap: register_code\n");
                             register_code(action.layer_tap.code);
+
+                            // Delay for MacOS #659
+                            if (action.layer_tap.code == KC_CAPSLOCK ||
+                                    action.layer_tap.code == KC_NUMLOCK ||
+                                    action.layer_tap.code == KC_SCROLLLOCK) {
+                                wait_ms(100);
+                            }
                         } else {
                             dprint("KEYMAP_TAP_KEY: No tap: On on press\n");
                             layer_on(action.layer_tap.val);
@@ -339,6 +356,15 @@ void process_action(keyrecord_t *record)
             break;
 #endif
         case ACT_COMMAND:
+            switch (action.command.id) {
+                case COMMAND_BOOTLOADER:
+                    if (event.pressed) {
+                        clear_keyboard();
+                        wait_ms(50);
+                        bootloader_jump();
+                    }
+                    break;
+            }
             break;
 #ifndef NO_ACTION_FUNCTION
         case ACT_FUNCTION:
@@ -363,37 +389,28 @@ void register_code(uint8_t code)
     }
 
 #ifdef LOCKING_SUPPORT_ENABLE
-    else if (KC_LOCKING_CAPS == code) {
+    else if (code == KC_LOCKING_CAPS ||
+                code == KC_LOCKING_NUM ||
+                code == KC_LOCKING_SCROLL) {
+        uint8_t c, l;
+        if (code == KC_LOCKING_CAPS) {
+            c = KC_CAPSLOCK;
+            l = 1<<USB_LED_CAPS_LOCK;
+        } else if (code == KC_LOCKING_NUM) {
+            c = KC_NUMLOCK;
+            l = 1<<USB_LED_NUM_LOCK;
+        } else if (code == KC_LOCKING_SCROLL) {
+            c = KC_SCROLLLOCK;
+            l = 1<<USB_LED_SCROLL_LOCK;
+        }
 #ifdef LOCKING_RESYNC_ENABLE
-        // Resync: ignore if caps lock already is on
-        if (host_keyboard_leds() & (1<<USB_LED_CAPS_LOCK)) return;
+        // Resync: ignore if lock indicator is already on
+        if (host_keyboard_leds() & l) return;
 #endif
-        add_key(KC_CAPSLOCK);
+        add_key(c);
         send_keyboard_report();
-        wait_ms(100);
-        del_key(KC_CAPSLOCK);
-        send_keyboard_report();
-    }
-
-    else if (KC_LOCKING_NUM == code) {
-#ifdef LOCKING_RESYNC_ENABLE
-        if (host_keyboard_leds() & (1<<USB_LED_NUM_LOCK)) return;
-#endif
-        add_key(KC_NUMLOCK);
-        send_keyboard_report();
-        wait_ms(100);
-        del_key(KC_NUMLOCK);
-        send_keyboard_report();
-    }
-
-    else if (KC_LOCKING_SCROLL == code) {
-#ifdef LOCKING_RESYNC_ENABLE
-        if (host_keyboard_leds() & (1<<USB_LED_SCROLL_LOCK)) return;
-#endif
-        add_key(KC_SCROLLLOCK);
-        send_keyboard_report();
-        wait_ms(100);
-        del_key(KC_SCROLLLOCK);
+        wait_ms(100); // Delay for MacOS #390
+        del_key(c);
         send_keyboard_report();
     }
 #endif
@@ -441,37 +458,28 @@ void unregister_code(uint8_t code)
     }
 
 #ifdef LOCKING_SUPPORT_ENABLE
-    else if (KC_LOCKING_CAPS == code) {
+    else if (code == KC_LOCKING_CAPS ||
+                code == KC_LOCKING_NUM ||
+                code == KC_LOCKING_SCROLL) {
+        uint8_t c, l;
+        if (code == KC_LOCKING_CAPS) {
+            c = KC_CAPSLOCK;
+            l = 1<<USB_LED_CAPS_LOCK;
+        } else if (code == KC_LOCKING_NUM) {
+            c = KC_NUMLOCK;
+            l = 1<<USB_LED_NUM_LOCK;
+        } else if (code == KC_LOCKING_SCROLL) {
+            c = KC_SCROLLLOCK;
+            l = 1<<USB_LED_SCROLL_LOCK;
+        }
 #ifdef LOCKING_RESYNC_ENABLE
-        // Resync: ignore if caps lock already is off
-        if (!(host_keyboard_leds() & (1<<USB_LED_CAPS_LOCK))) return;
+        // Resync: ignore if lock indicator is already off
+        if (!(host_keyboard_leds() & l)) return;
 #endif
-        add_key(KC_CAPSLOCK);
+        add_key(c);
         send_keyboard_report();
-        wait_ms(100);
-        del_key(KC_CAPSLOCK);
-        send_keyboard_report();
-    }
-
-    else if (KC_LOCKING_NUM == code) {
-#ifdef LOCKING_RESYNC_ENABLE
-        if (!(host_keyboard_leds() & (1<<USB_LED_NUM_LOCK))) return;
-#endif
-        add_key(KC_NUMLOCK);
-        send_keyboard_report();
-        wait_ms(100);
-        del_key(KC_NUMLOCK);
-        send_keyboard_report();
-    }
-
-    else if (KC_LOCKING_SCROLL == code) {
-#ifdef LOCKING_RESYNC_ENABLE
-        if (!(host_keyboard_leds() & (1<<USB_LED_SCROLL_LOCK))) return;
-#endif
-        add_key(KC_SCROLLLOCK);
-        send_keyboard_report();
-        wait_ms(100);
-        del_key(KC_SCROLLLOCK);
+        wait_ms(100); // Delay for MacOS #390
+        del_key(c);
         send_keyboard_report();
     }
 #endif
@@ -490,6 +498,12 @@ void unregister_code(uint8_t code)
     else if IS_CONSUMER(code) {
         host_consumer_send(0);
     }
+}
+
+void type_code(uint8_t code)
+{
+    register_code(code);
+    unregister_code(code);
 }
 
 void register_mods(uint8_t mods)
@@ -529,9 +543,11 @@ void clear_keyboard_but_mods(void)
 #endif
 }
 
-bool is_tap_key(keypos_t key)
+bool is_tap_key(keyevent_t event)
 {
-    action_t action = layer_switch_get_action(key);
+    if (IS_NOEVENT(event)) { return false; }
+
+    action_t action = layer_switch_get_action(event);
 
     switch (action.kind.id) {
         case ACT_LMODS_TAP:
@@ -539,18 +555,19 @@ bool is_tap_key(keypos_t key)
             switch (action.key.code) {
                 case MODS_ONESHOT:
                 case MODS_TAP_TOGGLE:
-                case KC_A ... KC_EXSEL:                 // tap key
-                case KC_LCTRL ... KC_RGUI:              // tap key
+                default:                    // tap key
                     return true;
             }
         case ACT_LAYER_TAP:
         case ACT_LAYER_TAP_EXT:
             switch (action.layer_tap.code) {
+                case OP_ON_OFF:
+                case OP_OFF_ON:
+                case OP_SET_CLEAR:
                 case 0xc0 ... 0xdf:         // with modifiers
                     return false;
-                case KC_A ... KC_EXSEL:     // tap key
-                case KC_LCTRL ... KC_RGUI:  // tap key
                 case OP_TAP_TOGGLE:
+                default:                    // tap key
                     return true;
             }
             return false;

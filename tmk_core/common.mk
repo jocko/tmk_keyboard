@@ -17,7 +17,10 @@ SRC +=	$(COMMON_DIR)/host.c \
 	$(COMMON_DIR)/avr/bootloader.c
 
 
-# Option modules
+ifeq (yes,$(strip $(NO_KEYBOARD)))
+    OPT_DEFS += -DNO_KEYBOARD
+endif
+
 ifeq (yes,$(strip $(UNIMAP_ENABLE)))
     SRC += $(COMMON_DIR)/unimap.c
     OPT_DEFS += -DUNIMAP_ENABLE
@@ -50,8 +53,20 @@ endif
 ifeq (yes,$(strip $(CONSOLE_ENABLE)))
     OPT_DEFS += -DCONSOLE_ENABLE
 else
-    OPT_DEFS += -DNO_PRINT
+    # Remove print functions when console is disabled and
+    # no other print method like UART is available
+    ifneq (yes, $(strip $(DEBUG_PRINT_AVAILABLE)))
+	OPT_DEFS += -DNO_PRINT
+	OPT_DEFS += -DNO_DEBUG
+    endif
+endif
+
+ifeq (yes,$(strip $(NO_DEBUG)))
     OPT_DEFS += -DNO_DEBUG
+endif
+
+ifeq (yes,$(strip $(NO_PRINT)))
+    OPT_DEFS += -DNO_PRINT
 endif
 
 ifeq (yes,$(strip $(COMMAND_ENABLE)))
@@ -61,6 +76,10 @@ endif
 
 ifeq (yes,$(strip $(NKRO_ENABLE)))
     OPT_DEFS += -DNKRO_ENABLE
+endif
+
+ifeq (yes,$(strip $(NKRO_6KRO_ENABLE)))
+    OPT_DEFS += -DNKRO_6KRO_ENABLE
 endif
 
 ifeq (yes,$(strip $(USB_6KRO_ENABLE)))
@@ -89,14 +108,16 @@ ifeq (yes,$(strip $(KEYMAP_SECTION_ENABLE)))
 	EXTRALDFLAGS = -Wl,-L$(TMK_DIR),-Tldscript_keymap_avr35.x
     else ifeq ($(strip $(MCU)),atmega32u4)
 	EXTRALDFLAGS = -Wl,-L$(TMK_DIR),-Tldscript_keymap_avr5.x
+    else ifeq ($(strip $(MCU)),at90usb1286)
+	EXTRALDFLAGS = -Wl,-L$(TMK_DIR),-Tldscript_keymap_avr51.x
     else
 	EXTRALDFLAGS = $(error no ldscript for keymap section)
     endif
 endif
 
 # Version string
-VERSION := $(shell (git describe --always --dirty || echo 'unknown') 2> /dev/null)
-OPT_DEFS += -DVERSION=$(VERSION)
+TMK_VERSION := $(shell (git rev-parse --short=6 HEAD || echo 'unknown') 2> /dev/null)
+OPT_DEFS += -DTMK_VERSION=$(TMK_VERSION)
 
 
 # Search Path

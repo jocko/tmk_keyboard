@@ -9,7 +9,6 @@ TARGET_DIR ?= .
 
 # project specific files
 SRC ?=	matrix.c \
-	led.c \
 	adb.c
 
 CONFIG_H = config.h
@@ -54,9 +53,6 @@ ARCH ?= AVR8
 #     CPU clock adjust registers or the clock division fuses), this will be equal to F_CPU.
 F_USB ?= $(F_CPU)
 
-# Interrupt driven control endpoint task(+60)
-OPT_DEFS += -DINTERRUPT_CONTROL_ENDPOINT
-
 
 # Boot Section Size in *bytes*
 #   Teensy halfKay   512
@@ -64,39 +60,56 @@ OPT_DEFS += -DINTERRUPT_CONTROL_ENDPOINT
 #   Atmel DFU loader 4096	for TMK Converter rev.1/rev.2
 #   LUFA bootloader  4096
 #   USBaspLoader     2048
-OPT_DEFS += -DBOOTLOADER_SIZE=4096
+BOOTLOADER_SIZE ?= 4096
+OPT_DEFS += -DBOOTLOADER_SIZE=$(BOOTLOADER_SIZE)
 
 
 # Build Options
 #   comment out to disable the options.
 #
-#BOOTMAGIC_ENABLE = yes	# Virtual DIP switch configuration(+1000)
-MOUSEKEY_ENABLE = yes	# Mouse keys(+4700)
-EXTRAKEY_ENABLE = yes	# Audio control and System control(+450)
-CONSOLE_ENABLE = yes	# Console for debug(+400)
-COMMAND_ENABLE = yes    # Commands for debug and configuration
-#SLEEP_LED_ENABLE = yes  # Breathing sleep LED during USB suspend
-#NKRO_ENABLE = yes	# USB Nkey Rollover
-ADB_MOUSE_ENABLE = yes
-#UNIMAP_ENABLE = yes
-#ACTIONMAP_ENABLE = yes         # Use 16bit actionmap instead of 8bit keymap
-#KEYMAP_SECTION_ENABLE = yes	# fixed address keymap for keymap editor
+BOOTMAGIC_ENABLE ?= no		# Virtual DIP switch configuration(+1000)
+MOUSEKEY_ENABLE ?= yes		# Mouse keys(+4700)
+EXTRAKEY_ENABLE ?= yes		# Audio control and System control(+450)
+CONSOLE_ENABLE ?= yes		# Console for debug(+400)
+COMMAND_ENABLE ?= yes		# Commands for debug and configuration
+NKRO_ENABLE ?= no		# USB Nkey Rollover
+ADB_MOUSE_ENABLE ?= yes		# ADB Mouse support
+UNIMAP_ENABLE ?= yes		# Use unimap
+ACTIONMAP_ENABLE ?= no          # Use 16bit actionmap instead of 8bit keymap
+KEYMAP_SECTION_ENABLE ?= yes	# fixed address keymap for keymap editor
 
 # ADB Mice need acceleration for todays much bigger screens. 
-OPT_DEFS += -DADB_MOUSE_MAXACC=8
+ADB_MOUSE_MAXACC ?= 8
+OPT_DEFS += -DADB_MOUSE_MAXACC=$(ADB_MOUSE_MAXACC)
 
+# Enable scroll wheel functionality using the y-axis of the mouse
+# Hold the assigned button down to scroll using the mouse
+#
+# Example:
+#  Kensington Turbo Mouse 5
+#                      ________
+#     middle click -> |3  __  4| <- scroll toggle (browser back when disabled)
+#                     |  /  \  |
+#                     |  \__/  |
+#       left click -> |1      2| <- right click
+#                     |________|
+#
+ADB_MOUSE_SCROLL_BUTTON ?= 4	# Assign the button (1-8) (0 to disable)
+ADB_MOUSE_SCROLL_SPEED ?= 10	# 1 (fastest) to 127 (slowest)
 
 # Optimize size but this may cause error "relocation truncated to fit"
 #EXTRALDFLAGS = -Wl,--relax
 
+OPT_DEFS += -DADB_MOUSE_SCROLL_BUTTON=$(ADB_MOUSE_SCROLL_BUTTON)
+OPT_DEFS += -DADB_MOUSE_SCROLL_SPEED=$(ADB_MOUSE_SCROLL_SPEED)
 
 #
 # Keymap file
 #
-ifdef UNIMAP_ENABLE
+ifeq (yes,$(strip $(UNIMAP_ENABLE)))
     KEYMAP_FILE = unimap
 else
-    ifdef ACTIONMAP_ENABLE
+    ifeq (yes,$(strip $(ACTIONMAP_ENABLE)))
 	KEYMAP_FILE = actionmap
     else
 	KEYMAP_FILE = keymap

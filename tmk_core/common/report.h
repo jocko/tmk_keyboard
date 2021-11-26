@@ -1,5 +1,5 @@
 /*
-Copyright 2011,2012 Jun Wako <wakojun@gmail.com>
+Copyright 2011,2012,2020 Jun Wako <wakojun@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,9 +33,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MOUSE_BTN3 (1<<2)
 #define MOUSE_BTN4 (1<<3)
 #define MOUSE_BTN5 (1<<4)
+#define MOUSE_BTN6 (1<<5)
+#define MOUSE_BTN7 (1<<6)
+#define MOUSE_BTN8 (1<<7)
 
-/* Consumer Page(0x0C)
- * following are supported by Windows: http://msdn.microsoft.com/en-us/windows/hardware/gg463372.aspx
+
+/*
+ * USB HID Specifications
+ * https://www.usb.org/hid#approved-usage-table-review-requests
+ */
+
+/*
+ * Consumer Page(0x0C)
+ * https://github.com/tmk/tmk_keyboard/issues/370
  */
 #define AUDIO_MUTE              0x00E2
 #define AUDIO_VOL_UP            0x00E9
@@ -65,8 +75,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define TRANSPORT_REWIND        0x00B4
 #define TRANSPORT_EJECT         0x00B8
 #define APPCONTROL_MINIMIZE     0x0206
+/* Display Brightness Controls  https://www.usb.org/sites/default/files/hutrr41_0.pdf */
+#define BRIGHTNESS_INCREMENT    0x006F
+#define BRIGHTNESS_DECREMENT    0x0070
 
-/* Generic Desktop Page(0x01) - system power control */
+/*
+ * Generic Desktop Page(0x01) - system power control
+ */
 #define SYSTEM_POWER_DOWN       0x0081
 #define SYSTEM_SLEEP            0x0082
 #define SYSTEM_WAKE_UP          0x0083
@@ -79,7 +94,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #   define KEYBOARD_REPORT_KEYS (KBD2_SIZE - 2)
 #   define KEYBOARD_REPORT_BITS (KBD2_SIZE - 1)
 
-#elif defined(PROTOCOL_LUFA) && defined(NKRO_ENABLE)
+#elif defined(PROTOCOL_LUFA) && (defined(NKRO_ENABLE) || defined(NKRO_6KRO_ENABLE))
 #   include "protocol/lufa/descriptor.h"
 #   define KEYBOARD_REPORT_SIZE NKRO_EPSIZE
 #   define KEYBOARD_REPORT_KEYS (NKRO_EPSIZE - 2)
@@ -127,7 +142,7 @@ typedef union {
         uint8_t reserved;
         uint8_t keys[KEYBOARD_REPORT_KEYS];
     };
-#ifdef NKRO_ENABLE
+#if defined(NKRO_ENABLE) || defined(NKRO_6KRO_ENABLE)
     struct {
         uint8_t mods;
         uint8_t bits[KEYBOARD_REPORT_BITS];
@@ -144,8 +159,15 @@ typedef struct {
 
 typedef struct {
     uint8_t buttons;
+#ifndef MOUSE_EXT_REPORT
     int8_t x;
     int8_t y;
+#else
+    int8_t boot_x;
+    int8_t boot_y;
+    int16_t x;
+    int16_t y;
+#endif
     int8_t v;
     int8_t h;
 } __attribute__ ((packed)) report_mouse_t;
@@ -179,7 +201,9 @@ typedef struct {
     (key == KC_WWW_FORWARD          ?  APPCONTROL_FORWARD : \
     (key == KC_WWW_STOP             ?  APPCONTROL_STOP : \
     (key == KC_WWW_REFRESH          ?  APPCONTROL_REFRESH : \
-    (key == KC_WWW_FAVORITES        ?  APPCONTROL_BOOKMARKS : 0)))))))))))))))))))))
+    (key == KC_WWW_FAVORITES        ?  APPCONTROL_BOOKMARKS : \
+    (key == KC_BRIGHTNESS_INC       ?  BRIGHTNESS_INCREMENT : \
+    (key == KC_BRIGHTNESS_DEC       ?  BRIGHTNESS_DECREMENT : 0)))))))))))))))))))))))
 
 #ifdef __cplusplus
 }

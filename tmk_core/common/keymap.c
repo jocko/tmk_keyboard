@@ -1,5 +1,5 @@
 /*
-Copyright 2013,2016 Jun Wako <wakojun@gmail.com>
+Copyright 2013,2016,2020 Jun Wako <wakojun@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -145,7 +145,7 @@ static action_t keycode_to_action(uint8_t keycode)
         case KC_SYSTEM_POWER ... KC_SYSTEM_WAKE:
             return (action_t)ACTION_USAGE_SYSTEM(KEYCODE2SYSTEM(keycode));
             break;
-        case KC_AUDIO_MUTE ... KC_WWW_FAVORITES:
+        case KC_AUDIO_MUTE ... KC_BRIGHTNESS_DEC:
             return (action_t)ACTION_USAGE_CONSUMER(KEYCODE2CONSUMER(keycode));
             break;
         case KC_MS_UP ... KC_MS_ACCEL2:
@@ -155,9 +155,7 @@ static action_t keycode_to_action(uint8_t keycode)
             return (action_t)ACTION_TRANSPARENT;
             break;
         case KC_BOOTLOADER:
-            clear_keyboard();
-            wait_ms(50);
-            bootloader_jump(); // not return
+            return (action_t)ACTION_COMMAND(COMMAND_BOOTLOADER, 0);
             break;
         default:
             return (action_t)ACTION_NO;
@@ -173,10 +171,6 @@ static action_t keycode_to_action(uint8_t keycode)
  * Legacy keymap support
  *      Consider using new keymap API instead.
  */
-extern const uint8_t keymaps[][MATRIX_ROWS][MATRIX_COLS];
-extern const uint8_t fn_layer[];
-extern const uint8_t fn_keycode[];
-
 __attribute__ ((weak))
 uint8_t keymap_get_keycode(uint8_t layer, uint8_t row, uint8_t col)
 {
@@ -224,10 +218,6 @@ action_t keymap_fn_to_action(uint8_t keycode)
 }
 
 #else
-
-/* user keymaps should be defined somewhere */
-extern const uint8_t keymaps[][MATRIX_ROWS][MATRIX_COLS];
-extern const action_t fn_actions[];
 
 __attribute__ ((weak))
 uint8_t keymap_key_to_keycode(uint8_t layer, keypos_t key)

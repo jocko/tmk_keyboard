@@ -70,14 +70,18 @@ static void power_down(uint8_t wdto)
     wdt_disable();
 }
 
+#ifdef SUSPEND_MODE_STANDBY
 static void standby(void)
 {
+#ifdef SLEEP_MODE_STANDBY
     set_sleep_mode(SLEEP_MODE_STANDBY);
     sleep_enable();
     sei();
     sleep_cpu();
     sleep_disable();
+#endif
 }
+#endif
 
 static void idle(void)
 {
@@ -111,21 +115,25 @@ void suspend_power_down(void)
 
 bool suspend_wakeup_condition(void)
 {
+#ifndef NO_KEYBOARD
     matrix_power_up();
     matrix_scan();
     matrix_power_down();
     for (uint8_t r = 0; r < MATRIX_ROWS; r++) {
         if (matrix_get_row(r)) return true;
     }
+#endif
     return false;
 }
 
 // run immediately after wakeup
 void suspend_wakeup_init(void)
 {
+#ifndef NO_KEYBOARD
     // clear keyboard state
     matrix_clear();
     clear_keyboard();
+#endif
 #ifdef BACKLIGHT_ENABLE
     backlight_init();
 #endif

@@ -334,10 +334,10 @@ MSG_CREATING_LIBRARY = Creating library:
 
 
 # Define all object files.
-OBJ = $(patsubst %.c,$(OBJDIR)/%.o,$(patsubst %.cpp,$(OBJDIR)/%.o,$(patsubst %.S,$(OBJDIR)/%.o,$(SRC))))
+OBJ = $(patsubst %.c,$(OBJDIR)/%.o,$(patsubst %.cpp,$(OBJDIR)/%.cpp.o,$(patsubst %.S,$(OBJDIR)/%.o,$(SRC))))
 
 # Define all listing files.
-LST = $(patsubst %.c,$(OBJDIR)/%.lst,$(patsubst %.cpp,$(OBJDIR)/%.lst,$(patsubst %.S,$(OBJDIR)/%.lst,$(SRC))))
+LST = $(patsubst %.c,$(OBJDIR)/%.lst,$(patsubst %.cpp,$(OBJDIR)/%.cpp.lst,$(patsubst %.S,$(OBJDIR)/%.lst,$(SRC))))
 
 
 # Compiler flags to generate dependency files.
@@ -348,9 +348,9 @@ GENDEPFLAGS = -MMD -MP -MF .dep/$(subst /,_,$@).d
 # Combine all necessary flags and optional flags.
 # Add target processor to flags.
 # You can give extra flags at 'make' command line like: make EXTRAFLAGS=-DFOO=bar
-ALL_CFLAGS = -mmcu=$(MCU) $(CFLAGS) $(GENDEPFLAGS) $(EXTRAFLAGS)
-ALL_CPPFLAGS = -mmcu=$(MCU) -x c++ $(CPPFLAGS) $(GENDEPFLAGS) $(EXTRAFLAGS)
-ALL_ASFLAGS = -mmcu=$(MCU) -x assembler-with-cpp $(ASFLAGS) $(EXTRAFLAGS)
+ALL_CFLAGS = -mmcu=$(MCU) $(CFLAGS) $(GENDEPFLAGS) $(EXTRAFLAGS) $(EXTRACFLAGS)
+ALL_CPPFLAGS = -mmcu=$(MCU) -x c++ $(CPPFLAGS) $(GENDEPFLAGS) $(EXTRAFLAGS) $(EXTRACPPFLAGS)
+ALL_ASFLAGS = -mmcu=$(MCU) -x assembler-with-cpp $(ASFLAGS) $(EXTRAFLAGS) $(EXTRAASFLAGS)
 
 
 
@@ -411,6 +411,9 @@ gccversion :
 program: $(TARGET).hex $(TARGET).eep
 	$(PROGRAM_CMD)
 
+dude: $(TARGET).hex
+	avrdude -p$(MCU) -cavr109 -b57600 -Uflash:w:$(TARGET).hex -P$(DEV)
+
 teensy: $(TARGET).hex
 	teensy_loader_cli -mmcu=$(MCU) -w -v $(TARGET).hex
 
@@ -427,13 +430,14 @@ dfu: $(TARGET).hex
 	done
 	@echo
 
-ifneq (, $(findstring 0.7, $(shell dfu-programmer --version 2>&1)))
+ifeq ($(shell dfu-programmer --version 2>&1 | grep -q 0.7; echo $$?),0)
 	dfu-programmer $(MCU) erase --force
 else
 	dfu-programmer $(MCU) erase
 endif
+
 	dfu-programmer $(MCU) flash $(TARGET).hex
-	dfu-programmer $(MCU) reset
+	dfu-programmer $(MCU) reset || true # ignore exit code
 	
 dfu-start:
 	dfu-programmer $(MCU) reset
@@ -447,11 +451,7 @@ flip-ee: $(TARGET).hex $(TARGET).eep
 	$(REMOVE) $(TARGET)eep.hex
 
 dfu-ee: $(TARGET).hex $(TARGET).eep
-ifneq (, $(findstring 0.7, $(shell dfu-programmer --version 2>&1)))
 	dfu-programmer $(MCU) flash --eeprom $(TARGET).eep
-else
-	dfu-programmer $(MCU) flash-eeprom $(TARGET).eep
-endif
 	dfu-programmer $(MCU) reset
 
 
@@ -561,7 +561,7 @@ $(OBJDIR)/%.o : %.c
 
 
 # Compile: create object files from C++ source files.
-$(OBJDIR)/%.o : %.cpp
+$(OBJDIR)/%.cpp.o : %.cpp
 	@echo
 	mkdir -p $(@D)
 	@echo $(MSG_COMPILING_CPP) $<

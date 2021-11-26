@@ -36,8 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 001r|mods|0000 0000    Modifiers with OneShot[TAP]
  * 001r|mods|0000 0001    Modifiers with tap toggle[TAP]
  * 001r|mods|0000 00xx    (reserved)            (0x02-03)
- * 001r|mods| keycode     Modifiers with tap key(0x04-A4, E0-E7)[TAP]
- *                        (reserved)            (0xA5-DF, E8-FF)
+ * 001r|mods| keycode     Modifiers with tap key[TAP]
  *
  *
  * Other Keys(01xx)
@@ -48,7 +47,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 0100|10| usage(10)     (reserved)
  * 0100|11| usage(10)     (reserved)
  *
- * ACT_MOUSEKEY(0110): TODO: Not needed?
+ * ACT_MOUSEKEY(0101): TODO: Not needed?
  * 0101|xxxx| keycode     Mouse key
  *
  * 011x|xxxx xxxx xxxx    (reseved)
@@ -71,10 +70,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 1001|oopp|BBBB BBBB   8-bit Bitwise Operation???
  *
  * ACT_LAYER_TAP(101x):
- * 101E|LLLL| keycode    On/Off with tap key    (0x04-A4, E0-E7)[TAP]
+ * 101E|LLLL| keycode    On/Off with tap key    [TAP]
  * 101E|LLLL|110r mods   On/Off with modifiers  (0xC0-DF)[NOT TAP]
  *                       r: Left/Right flag(Left:0, Right:1)
- *                       (reserved)             (0xA5-BF, E8-EF)
  * 101E|LLLL|1111 0000   Invert with tap toggle (0xF0)   [TAP]
  * 101E|LLLL|1111 0001   On/Off                 (0xF1)   [NOT TAP]
  * 101E|LLLL|1111 0010   Off/On                 (0xF2)   [NOT TAP]
@@ -271,7 +269,7 @@ enum layer_pram_tap_op {
 #define ACTION_LAYER_ON_OFF(layer)                  ACTION_LAYER_TAP((layer), OP_ON_OFF)
 #define ACTION_LAYER_OFF_ON(layer)                  ACTION_LAYER_TAP((layer), OP_OFF_ON)
 #define ACTION_LAYER_SET_CLEAR(layer)               ACTION_LAYER_TAP((layer), OP_SET_CLEAR)
-#define ACTION_LAYER_MODS(layer, mods)              ACTION_LAYER_TAP((layer), 0xc0 | ((mods>>8)&0x1f))
+#define ACTION_LAYER_MODS(layer, mods)              ACTION_LAYER_TAP((layer), 0xc0 | (((mods)>>8)&0x1f))
 /* With Tapping */
 #define ACTION_LAYER_TAP_KEY(layer, key)            ACTION_LAYER_TAP((layer), (key))
 #define ACTION_LAYER_TAP_TOGGLE(layer)              ACTION_LAYER_TAP((layer), OP_TAP_TOGGLE)
@@ -290,6 +288,12 @@ enum layer_pram_tap_op {
 /*
  * Extensions
  */
+/* Macro */
+#define ACTION_MACRO(id)                ACTION(ACT_MACRO, (id))
+#define ACTION_MACRO_TAP(id)            ACTION(ACT_MACRO, FUNC_TAP<<8 | (id))
+#define ACTION_MACRO_OPT(id, opt)       ACTION(ACT_MACRO, (opt)<<8 | (id))
+
+/* Backlight */
 enum backlight_opt {
     BACKLIGHT_INCREASE = 0,
     BACKLIGHT_DECREASE = 1,
@@ -297,18 +301,18 @@ enum backlight_opt {
     BACKLIGHT_STEP     = 3,
     BACKLIGHT_LEVEL    = 4,
 };
-/* Macro */
-#define ACTION_MACRO(id)                ACTION(ACT_MACRO, (id))
-#define ACTION_MACRO_TAP(id)            ACTION(ACT_MACRO, FUNC_TAP<<8 | (id))
-#define ACTION_MACRO_OPT(id, opt)       ACTION(ACT_MACRO, (opt)<<8 | (id))
-/* Backlight */
 #define ACTION_BACKLIGHT_INCREASE()     ACTION(ACT_BACKLIGHT, BACKLIGHT_INCREASE << 8)
 #define ACTION_BACKLIGHT_DECREASE()     ACTION(ACT_BACKLIGHT, BACKLIGHT_DECREASE << 8)
 #define ACTION_BACKLIGHT_TOGGLE()       ACTION(ACT_BACKLIGHT, BACKLIGHT_TOGGLE << 8)
 #define ACTION_BACKLIGHT_STEP()         ACTION(ACT_BACKLIGHT, BACKLIGHT_STEP << 8)
 #define ACTION_BACKLIGHT_LEVEL(level)   ACTION(ACT_BACKLIGHT, BACKLIGHT_LEVEL << 8 | level)
+
 /* Command */
-#define ACTION_COMMAND(id, opt)         ACTION(ACT_COMMAND,  (opt)<<8 | (addr))
+enum command_ids {
+    COMMAND_BOOTLOADER, // jump to bootloader
+};
+#define ACTION_COMMAND(id, opt)         ACTION(ACT_COMMAND,  (opt)<<8 | (id))
+
 /* Function */
 enum function_opts {
     FUNC_TAP = 0x8,     /* indciates function is tappable */
