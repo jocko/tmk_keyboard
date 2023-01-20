@@ -1,23 +1,21 @@
 # Target file name (without extension).
-TARGET ?= ibmpc_usb
+TARGET = serial_mouse
 
 # Directory common source filess exist
-TMK_DIR ?= ../../tmk_core
+TMK_DIR = ../../tmk_core
 
 # Directory keyboard dependent files exist
-TARGET_DIR ?= .
+TARGET_DIR = .
 
 # project specific files
-#SRC ?=	protocol/ibmpc.c \
-#	ibmpc_usb.c
-SRC ?=	protocol/ibmpc.cpp \
-	ibmpc_usb.cpp
+SRC =	serial_mouse.c
 
-CONFIG_H ?= config.h
+CONFIG_H = config.h
 
 
 # MCU name
-MCU ?= atmega32u4
+#MCU = at90usb1287
+MCU = atmega32u4
 
 # Processor frequency.
 #     This will define a symbol, F_CPU, in all source code files equal to the
@@ -30,14 +28,14 @@ MCU ?= atmega32u4
 #     does not *change* the processor frequency - it should merely be updated to
 #     reflect the processor speed set externally so that the code can use accurate
 #     software delays.
-F_CPU ?= 16000000
+F_CPU = 16000000
 
 
 #
 # LUFA specific
 #
 # Target architecture (see library "Board Types" documentation).
-ARCH ?= AVR8
+ARCH = AVR8
 
 # Input clock frequency.
 #     This will define a symbol, F_USB, in all source code files equal to the
@@ -50,11 +48,11 @@ ARCH ?= AVR8
 #
 #     If no clock division is performed on the input clock inside the AVR (via the
 #     CPU clock adjust registers or the clock division fuses), this will be equal to F_CPU.
-F_USB ?= $(F_CPU)
+F_USB = $(F_CPU)
 
+# Interrupt driven control endpoint task(+60)
+#OPT_DEFS += -DINTERRUPT_CONTROL_ENDPOINT
 
-# This improves response of keyboard when wakeup
-OPT_DEFS += -DSUSPEND_MODE_STANDBY
 
 # Boot Section Size in *bytes*
 #   Teensy halfKay   512
@@ -62,67 +60,34 @@ OPT_DEFS += -DSUSPEND_MODE_STANDBY
 #   Atmel DFU loader 4096
 #   LUFA bootloader  4096
 #   USBaspLoader     2048
-# Bootloader size can be calculated from fuse bits
-#BOOTLOADER_SIZE ?= 4096
-#OPT_DEFS += -DBOOTLOADER_SIZE=$(BOOTLOADER_SIZE)
+OPT_DEFS += -DBOOTLOADER_SIZE=4096
 
 
 # Build Options
 #   comment out to disable the options.
 #
-BOOTMAGIC_ENABLE ?= no	# Virtual DIP switch configuration(+1150)
-MOUSEKEY_ENABLE ?= yes	# Mouse keys(+2200)
-EXTRAKEY_ENABLE ?= yes	# Audio control and System control(+400)
-CONSOLE_ENABLE ?= yes	# Console for debug(+4150)
-COMMAND_ENABLE ?= yes	# Commands for debug and configuration(+3600)
-NKRO_ENABLE ?= yes	# USB Nkey Rollover(+350)
-
-KEYMAP_SECTION_ENABLE ?= yes
-UNIMAP_ENABLE ?= yes
-
-# IBMPC Options
-IBMPC_SECONDARY ?= yes		# enable secondary interface(+800)
-IBMPC_MOUSE_ENABLE ?= yes	# enable mouse support(+2000)
+#BOOTMAGIC_ENABLE = yes	# Virtual DIP switch configuration(+1000)
+#MOUSEKEY_ENABLE = yes	# Mouse keys(+4700)
+#EXTRAKEY_ENABLE = yes	# Audio control and System control(+450)
+CONSOLE_ENABLE = yes	# Console for debug(+400)
+#COMMAND_ENABLE = yes    # Commands for debug and configuration
+#SLEEP_LED_ENABLE = yes  # Breathing sleep LED during USB suspend
+#NKRO_ENABLE = yes	# USB Nkey Rollover
 
 
-# Optimize size but this may cause error "relocation truncated to fit"
-#EXTRALDFLAGS = -Wl,--relax
+NO_KEYBOARD = yes			# disable keyboard
+SERIAL_MOUSE_MICROSOFT_ENABLE = yes
 
+SERIAL_MOUSE_USE_UART = yes		# Hardware UART(preferable)
+#SERIAL_MOUSE_USE_SOFT = yes		# Software Serial
 
-#
-# Keymap file
-#
-ifdef UNIMAP_ENABLE
-    KEYMAP_FILE = unimap
-else
-    ifdef ACTIONMAP_ENABLE
-	KEYMAP_FILE = actionmap
-    else
-	KEYMAP_FILE = keymap
-    endif
-endif
-ifdef KEYMAP
-    SRC := $(KEYMAP_FILE)_$(KEYMAP).c $(SRC)
-else
-    SRC := $(KEYMAP_FILE)_plain.c $(SRC)
-endif
-
-
-ifeq (yes,$(strip $(IBMPC_SECONDARY)))
-    OPT_DEFS += -DIBMPC_SECONDARY
-endif
-
-ifeq (yes,$(strip $(IBMPC_MOUSE_ENABLE)))
-    OPT_DEFS += -DIBMPC_MOUSE_ENABLE
-    OPT_DEFS += -DMOUSE_ENABLE
-endif
 
 
 # Search Path
 VPATH += $(TARGET_DIR)
 VPATH += $(TMK_DIR)
 
+include $(TMK_DIR)/common.mk
 include $(TMK_DIR)/protocol.mk
 include $(TMK_DIR)/protocol/lufa.mk
-include $(TMK_DIR)/common.mk
 include $(TMK_DIR)/rules.mk

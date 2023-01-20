@@ -354,9 +354,10 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 #endif
 
 #ifdef CONSOLE_ENABLE
+    // ATMega32U2 doesn't support double bank on endpoint 1 and 2, use 3 or 4
     /* Setup Console HID Report Endpoints */
     ConfigSuccess &= ENDPOINT_CONFIG(CONSOLE_IN_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN,
-                                     CONSOLE_EPSIZE, ENDPOINT_BANK_SINGLE);
+                                     CONSOLE_EPSIZE, ENDPOINT_BANK_DOUBLE);
 #if 0
     ConfigSuccess &= ENDPOINT_CONFIG(CONSOLE_OUT_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_OUT,
                                      CONSOLE_EPSIZE, ENDPOINT_BANK_SINGLE);
@@ -761,7 +762,11 @@ int main(void)
 
 #ifndef NO_USB_STARTUP_WAIT_LOOP
     /* wait for USB startup */
-    while (USB_DeviceState != DEVICE_STATE_Configured) {
+    while (USB_DeviceState != DEVICE_STATE_Configured
+#ifdef CONSOLE_ENABLE
+            || !console_is_ready()
+#endif
+            ) {
 #if defined(INTERRUPT_CONTROL_ENDPOINT)
         ;
 #else
