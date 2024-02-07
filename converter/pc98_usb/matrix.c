@@ -60,8 +60,11 @@ static void pc98_send(uint8_t data)
 
 static int16_t pc98_wait_response(void)
 {
-    int16_t code = -1;
-    uint8_t timeout = 255;
+    int16_t code;
+    uint8_t timeout;
+RETRY:
+    code = -1;
+    timeout = 255;
     while (timeout-- && (code = serial_recv2()) == -1) _delay_ms(1);
 
     // Keyboards require RDY pulse >=37us to send next data
@@ -71,6 +74,7 @@ static int16_t pc98_wait_response(void)
     PC98_RDY_PORT &= ~(1<<PC98_RDY_BIT);
 
     xprintf("r%04X ", code);
+    if (code == 0xFB) goto RETRY;
     return code;
 }
 
@@ -103,6 +107,19 @@ static bool pc98_is_newtype(void)
     if (code != 0x80) return false;
 
     return true;
+}
+
+static void pc98_enable_winkey(void)
+{
+    uint16_t code;
+RETRY:
+    pc98_send(0x95);
+    code = pc98_wait_response();
+    if (code != 0xFA) return;
+
+    pc98_send(0x03);
+    code = pc98_wait_response();
+    if (code != 0xFA) goto RETRY;
 }
 
 static uint8_t pc98_led = 0;
@@ -139,9 +156,15 @@ void matrix_init(void)
 
     serial_init();
 
-    _delay_ms(50);
-    if (pc98_is_newtype()) xprintf("new type\n"); else xprintf("old type\n");
+    _delay_ms(500);
+    xprintf("\nKeyboard Type: ");
+    if (pc98_is_newtype()) xprintf("[NEW]"); else xprintf("[OLD]");
+
+    xprintf("\nInhibit Repeat: ");
     pc98_inhibit_repeat();
+
+    xprintf("\nEnable Winkey: ");
+    pc98_enable_winkey();
 
     // initialize matrix state: all keys off
     for (uint8_t i=0; i < MATRIX_ROWS; i++) matrix[i] = 0x00;

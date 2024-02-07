@@ -41,6 +41,7 @@
 #include "host_driver.h"
 #include "keyboard.h"
 #include "action.h"
+#include "action_util.h"
 #include "led.h"
 #include "sendchar.h"
 #include "ringbuf.h"
@@ -73,7 +74,7 @@ uint8_t keyboard_idle = 0;
 /* 0: Boot Protocol, 1: Report Protocol(default) */
 uint8_t keyboard_protocol = 1;
 static uint8_t keyboard_led_stats = 0;
-static report_keyboard_t keyboard_report_sent;
+static report_keyboard_t keyboard_report_sent = (report_keyboard_t){};
 #endif
 
 #ifdef MOUSE_ENABLE
@@ -104,7 +105,11 @@ host_driver_t lufa_driver = {
  * Console
  ******************************************************************************/
 #ifdef CONSOLE_ENABLE
-#define SENDBUF_SIZE 256
+#   ifdef _AVR_ATmega32U2_H_
+#       define SENDBUF_SIZE 128
+#   else
+#       define SENDBUF_SIZE 256
+#   endif
 static uint8_t sbuf[SENDBUF_SIZE];
 static ringbuf_t sendbuf = {
     .buffer = sbuf,
@@ -305,6 +310,19 @@ void EVENT_USB_Device_Reset(void)
 #ifdef TMK_LUFA_DEBUG
     print("[R]");
 #endif
+
+// reset to initial state: protocol to Report(default)
+#ifndef NO_KEYBOARD
+    keyboard_protocol = 1;
+    keyboard_idle = 0;
+    keyboard_led_stats = 0;
+    keyboard_report_sent = (report_keyboard_t){};
+    // keyboard_report keys/bits part is not compatible between Boot and Report protocol
+    clear_keys();
+#endif
+#ifdef MOUSE_ENABLE
+    mouse_protocol = 1;
+#endif
 }
 
 void EVENT_USB_Device_Suspend()
@@ -442,7 +460,7 @@ void EVENT_USB_Device_ControlRequest(void)
                     Endpoint_ClearOUT();
                     Endpoint_ClearStatusStage();
 #ifdef TMK_LUFA_DEBUG
-                    xprintf("[L%d]", USB_ControlRequest.wIndex);
+                    xprintf("[L%d %02X]", USB_ControlRequest.wIndex, keyboard_led_stats);
 #endif
                     break;
 #endif
@@ -488,9 +506,8 @@ void EVENT_USB_Device_ControlRequest(void)
                     Endpoint_ClearStatusStage();
 
                     keyboard_protocol = (USB_ControlRequest.wValue & 0xFF);
-                    clear_keyboard();
 #ifdef TMK_LUFA_DEBUG
-                    print("[P]");
+                    xprintf("[P%d %04X]", USB_ControlRequest.wIndex, USB_ControlRequest.wValue);
 #endif
                 }
 #endif
@@ -500,7 +517,9 @@ void EVENT_USB_Device_ControlRequest(void)
                     Endpoint_ClearStatusStage();
 
                     mouse_protocol = (USB_ControlRequest.wValue & 0xFF);
-                    clear_keyboard();
+#ifdef TMK_LUFA_DEBUG
+                    xprintf("[P%d %04X]", USB_ControlRequest.wIndex, USB_ControlRequest.wValue);
+#endif
                 }
 #endif
             }
@@ -515,7 +534,7 @@ void EVENT_USB_Device_ControlRequest(void)
 
                 keyboard_idle = ((USB_ControlRequest.wValue & 0xFF00) >> 8);
 #ifdef TMK_LUFA_DEBUG
-                xprintf("[I%d]%d", USB_ControlRequest.wIndex, (USB_ControlRequest.wValue & 0xFF00) >> 8);
+                xprintf("[I%d %04X]", USB_ControlRequest.wIndex, USB_ControlRequest.wValue);
 #endif
 #endif
             }
@@ -632,6 +651,12 @@ static void send_system(uint16_t data)
     if (USB_DeviceState != DEVICE_STATE_Configured)
         return;
 
+#ifdef MOUSE_ENABLE
+    // Not send while mouse is set to Boot Protocol
+    if (mouse_protocol == 0)
+        return;
+#endif
+
     report_extra_t r = { .report_id = REPORT_ID_SYSTEM };
     if (data < SYSTEM_POWER_DOWN) {
         r.usage = 0;
@@ -656,6 +681,12 @@ static void send_consumer(uint16_t data)
 
     if (USB_DeviceState != DEVICE_STATE_Configured)
         return;
+
+#ifdef MOUSE_ENABLE
+    // Not send while mouse is set to Boot Protocol
+    if (mouse_protocol == 0)
+        return;
+#endif
 
     report_extra_t r = {
         .report_id = REPORT_ID_CONSUMER,
