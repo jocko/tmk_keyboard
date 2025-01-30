@@ -5,15 +5,15 @@
  */
 const uint8_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = {
-    {KC_FN10, KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,    KC_NO,   KC_NO,   KC_NO,    KC_NO},
-    {KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,     KC_P,    KC_LBRC, KC_BSPC,  KC_PAUS},
-    {KC_ESC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,     KC_SCLN, KC_QUOT, KC_ENT,   KC_NO},
+    {KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,    KC_NO,   KC_NO,   KC_NO,    KC_NO},
+    {KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,     KC_P,    KC_BSPC, KC_NO,    KC_PAUS},
+    {KC_ESC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,     KC_SCLN, KC_ENT,  KC_NO,    KC_NO},
     {KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,   KC_SLSH, KC_RSFT, KC_NO,    KC_NO},
-    {KC_NO,   KC_NO,   KC_FN7,  KC_FN0,  KC_LCTL, KC_SPC,  KC_FN1,  KC_FN8,  KC_NO,   KC_LEFT,  KC_DOWN, KC_UP,   KC_RIGHT, KC_NO},
+    {KC_NO,   KC_NO,   KC_LALT, KC_FN0,  KC_LCTL, KC_SPC,  KC_FN1,  KC_RGUI, KC_NO,   KC_LEFT,  KC_DOWN, KC_UP,   KC_RIGHT, KC_NO},
   },
   [1] = {
     {KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,  KC_TRNS, KC_TRNS, KC_TRNS,  KC_TRNS},
-    {KC_FN5,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,     KC_0,    KC_TRNS, KC_TRNS,  KC_TRNS},
+    {KC_TRNS, KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,     KC_0,    KC_TRNS, KC_TRNS,  KC_TRNS},
     {KC_TRNS, KC_FN11, KC_QUOT, KC_LBRC, KC_FN12, KC_FN13, KC_FN14, KC_FN15, KC_RBRC, KC_MINS,  KC_FN16, KC_TRNS, KC_TRNS,  KC_TRNS},
     {KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,  KC_TRNS, KC_TRNS, KC_TRNS,  KC_TRNS},
     {KC_TRNS, KC_TRNS, KC_LALT, KC_FN0,  KC_LCTL, KC_SPC,  KC_FN1,  KC_RGUI, KC_TRNS, KC_TRNS,  KC_TRNS, KC_TRNS, KC_TRNS,  KC_TRNS},
@@ -39,10 +39,10 @@ const action_t PROGMEM fn_actions[] = {
     [0] = ACTION_LAYER_MOMENTARY(1),
     [1] = ACTION_LAYER_MOMENTARY(2),
 
-    [5] = ACTION_MACRO(CMD_TAB),
-    [6] = ACTION_MACRO(CTL_TAB),
-    [7] = ACTION_MODS_TAP_KEY(MOD_LALT, KC_F5),
-    [8] = ACTION_MODS_ONESHOT(MOD_RGUI),
+    /* [5] = ACTION_MACRO(CMD_TAB), */
+    /* [6] = ACTION_MACRO(CTL_TAB), */
+    /* [7] = ACTION_MODS_TAP_KEY(MOD_LALT, KC_F5), */
+    /* [8] = ACTION_MODS_ONESHOT(MOD_RGUI), */
     /* [9] = ACTION_MODS_TAP_KEY(MOD_RSFT, KC_CAPS), */
 
     [10] = ACTION_MODS_KEY(MOD_LSFT, KC_GRV),

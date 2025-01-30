@@ -19,15 +19,15 @@ const uint8_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [2] = {
     {KC_GRV,  KC_TRNS, KC_FN21, KC_FN22, KC_FN24, KC_TRNS, KC_NO,   KC_NO,   KC_TRNS, KC_TRNS, KC_LBRC, KC_RBRC,  KC_BSLS, KC_TRNS},
     {KC_TRNS, KC_FN20, KC_FN25, KC_FN23, KC_FN27, KC_FN26, KC_NO,   KC_NO,   KC_LEFT, KC_DOWN, KC_UP,   KC_RIGHT, KC_EQL,  KC_TRNS},
-    {KC_NO,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_NO,   KC_NO,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,  KC_TRNS, KC_NO},
+    {KC_NO,   KC_PAUS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_NO,   KC_NO,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,  KC_TRNS, KC_NO},
     {KC_NO,   KC_NO,   KC_NO,   KC_LALT, KC_FN0,  KC_LCTL, KC_LSFT, KC_RSFT, KC_SPC,  KC_FN1,  KC_RGUI, KC_NO,    KC_NO,   KC_NO},
   },
 };
 
-enum macro_id {
-  CMD_TAB,
-  CTL_TAB,
-};
+/* enum macro_id { */
+/*   CMD_TAB, */
+/*   CTL_TAB, */
+/* }; */
 
 /*
  * Fn action definition
@@ -63,17 +63,17 @@ const action_t PROGMEM fn_actions[] = {
     [27] = ACTION_MODS_KEY(MOD_LSFT, KC_8), // *
 };
 
-const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt) 
-{
-  switch(id) {
-    case CMD_TAB:
-      return (record->event.pressed ?
-          MACRO( D(LGUI), D(TAB), END ) :
-          MACRO( U(TAB), END ));
-    case CTL_TAB:
-      return (record->event.pressed ?
-          MACRO( D(LCTL), D(TAB), END ) :
-          MACRO( U(TAB), END ));
-  } 
-  return MACRO_NONE;
-};
+/* const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt) */ 
+/* { */
+/*   switch(id) { */
+/*     case CMD_TAB: */
+/*       return (record->event.pressed ? */
+/*           MACRO( D(LGUI), D(TAB), END ) : */
+/*           MACRO( U(TAB), END )); */
+/*     case CTL_TAB: */
+/*       return (record->event.pressed ? */
+/*           MACRO( D(LCTL), D(TAB), END ) : */
+/*           MACRO( U(TAB), END )); */
+/*   } */ 
+/*   return MACRO_NONE; */
+/* }; */
