@@ -3,11 +3,15 @@ traktor keyboard firmware
 
 This is for the board with a Pro Micro in it!
 
-Makefile is only for compiling. Flashing is done by:
+Build it:
 
-      avrdude -patmega32u4 -cavr109 -b57600 -Uflash:w:traktor_lufa.hex -P/dev/ttyACM1
+    make
+
+Then upload:
+
+    sleep 5; make program
 
 Controller reset can be triggered via boot magic `LShift + RShift + Pause`
-(`Pause` is left layer button + backspace). Reset can also be triggered by
+(`Pause` is left layer button + enter). Reset can also be triggered by
 shorting RST to GND.
 

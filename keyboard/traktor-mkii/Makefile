@@ -129,6 +129,9 @@ NKRO_ENABLE = no	# USB Nkey Rollover - not yet supported in LUFA
 VPATH += $(TARGET_DIR)
 VPATH += $(TMK_DIR)
 
+DEV=/dev/ttyACM0
+PROGRAM_CMD = avrdude -p$(MCU) -cavr109 -b57600 -Uflash:w:$(TARGET).hex -P$(DEV)
+
 include $(TMK_DIR)/protocol/lufa.mk
 include $(TMK_DIR)/common.mk
 include $(TMK_DIR)/rules.mk
