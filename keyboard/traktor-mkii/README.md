@@ -3,7 +3,16 @@ traktor keyboard firmware
 
 This is for the board with a Pro Micro in it!
 
-Build it:
+Add udev rule:
+
+    echo 'SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", SYMLINK+="traktor-mkii"' \
+        | sudo tee /etc/udev/rules.d/10-tmk-arduino-micro.rules
+
+Use must belong to `dialout` group:
+
+    sudo usermod -aG dialout $USER
+
+Build firmware:
 
     make
 
