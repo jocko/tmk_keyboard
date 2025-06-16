@@ -8,9 +8,13 @@ Add udev rule:
     echo 'SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", SYMLINK+="traktor-mkii"' \
         | sudo tee /etc/udev/rules.d/10-tmk-arduino-micro.rules
 
-Use must belong to `dialout` group:
+Use must belong to correct group. For example, `dialout` on Ubuntu:
 
     sudo usermod -aG dialout $USER
+
+Or, `uucp` on Arch:
+
+    sudo usermod -aG uucp $USER
 
 Build firmware:
 
